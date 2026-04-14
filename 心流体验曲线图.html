@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X+SLG 竞品心流体验对比</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: #0f1117;
+    color: #e0e0e0;
+    padding: 24px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+  .legend-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .chart-section {
+    background: #1a1d28;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #2a2d3a;
+  }
+  .chart-section h2 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #f0f0f0;
+  }
+  .chart-section .desc {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 16px;
+  }
+  .chart-wrapper {
+    position: relative;
+    width: 100%;
+    height: 340px;
+  }
+  .main-chart .chart-wrapper {
+    height: 420px;
+  }
+  .note-section {
+    background: #1a1d28;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    border: 1px solid #2a2d3a;
+  }
+  .note-section h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: #a78bfa;
+  }
+  .note-section p {
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.8;
+  }
+  .formula-box {
+    background: #12141c;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    color: #60a5fa;
+    text-align: center;
+  }
+  /* 线段切换按钮组 */
+  .toggle-bar {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 2px solid;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+  }
+  .toggle-btn .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transition: all 0.25s ease;
+  }
+  /* LW */
+  .toggle-btn[data-game="lw"] {
+    border-color: #f472b6;
+    color: #f472b6;
+  }
+  .toggle-btn[data-game="lw"] .dot { background: #f472b6; }
+  .toggle-btn[data-game="lw"].active {
+    background: rgba(244,114,182,0.15);
+    box-shadow: 0 0 12px rgba(244,114,182,0.25);
+  }
+  .toggle-btn[data-game="lw"]:not(.active) {
+    opacity: 0.4;
+  }
+  /* WOS */
+  .toggle-btn[data-game="wos"] {
+    border-color: #60a5fa;
+    color: #60a5fa;
+  }
+  .toggle-btn[data-game="wos"] .dot { background: #60a5fa; }
+  .toggle-btn[data-game="wos"].active {
+    background: rgba(96,165,250,0.15);
+    box-shadow: 0 0 12px rgba(96,165,250,0.25);
+  }
+  .toggle-btn[data-game="wos"]:not(.active) {
+    opacity: 0.4;
+  }
+  /* Kingshot */
+  .toggle-btn[data-game="ks"] {
+    border-color: #34d399;
+    color: #34d399;
+  }
+  .toggle-btn[data-game="ks"] .dot { background: #34d399; }
+  .toggle-btn[data-game="ks"].active {
+    background: rgba(52,211,153,0.15);
+    box-shadow: 0 0 12px rgba(52,211,153,0.25);
+  }
+  .toggle-btn[data-game="ks"]:not(.active) {
+    opacity: 0.4;
+  }
+  .toggle-btn:hover {
+    transform: translateY(-1px);
+  }
+  /* 维度切换按钮组 */
+  .dim-toggle-bar {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .dim-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 16px;
+    border: 1.5px solid #555;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+  }
+  .dim-btn .dim-icon { font-size: 14px; }
+  .dim-btn.active {
+    border-color: #a78bfa;
+    color: #e0e0e0;
+    background: rgba(167,139,250,0.12);
+    box-shadow: 0 0 8px rgba(167,139,250,0.2);
+  }
+  .dim-btn:not(.active) { opacity: 0.5; }
+  .dim-btn:hover { transform: translateY(-1px); }
+  /* 合一子维度图表区高度 */
+  .combo-chart .chart-wrapper {
+    height: 420px;
+  }
+</style>
+</head>
+<body>
+
+<h1>X+SLG 竞品前两小时心流体验对比</h1>
+<p class="subtitle">Last War · WOS（无尽冬日） · Kingshot（奔奔王国） — 六维综合评分法</p>
+
+<div class="legend-bar">
+  <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div>Last War</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div>WOS（无尽冬日）</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div>Kingshot（奔奔王国）</div>
+</div>
+
+<div class="note-section">
+  <h3>📐 评分方法说明</h3>
+  <p>
+    心流强度采用六维综合评分法，每维度 1-10 分。<br>
+    正向维度：目标清晰度、反馈密度、成长感、操作参与（分高 = 体验越好）<br>
+    负向维度：理解负担、阻滞感（分高 = 负担越重）<br>
+    负向维度经反向处理后与正向维度共同取平均，得到各时间段心流强度。
+  </p>
+  <div class="formula-box">
+    心流强度 = ( 目标清晰度 + 反馈密度 + 成长感 + 操作参与 + (11−理解负担) + (11−阻滞感) ) / 6
+  </div>
+</div>
+
+<!-- 主图 -->
+<div class="chart-section main-chart">
+  <h2>📊 心流强度总曲线</h2>
+  <div class="desc">综合六维评分的心流体验趋势，Y轴为心流强度（1-10）</div>
+  <div class="toggle-bar">
+    <button class="toggle-btn active" data-game="lw" onclick="toggleLine(0, this)"><span class="dot"></span>LW</button>
+    <button class="toggle-btn active" data-game="wos" onclick="toggleLine(1, this)"><span class="dot"></span>WOS</button>
+    <button class="toggle-btn active" data-game="ks" onclick="toggleLine(2, this)"><span class="dot"></span>Kingshot</button>
+  </div>
+  <div class="chart-wrapper">
+    <canvas id="chartMain"></canvas>
+  </div>
+</div>
+
+<!-- 子维度合一图表 -->
+<div class="chart-section combo-chart">
+  <h2>📐 六维子维度对比</h2>
+  <div class="desc">点击维度按钮切换显示，负向维度已做反向处理（11−原始分），所有维度统一为"越高越好"</div>
+  <div class="dim-toggle-bar">
+    <button class="dim-btn active" data-dim="goal" onclick="toggleDim('goal', this)"><span class="dim-icon">🎯</span>目标清晰度</button>
+    <button class="dim-btn" data-dim="feedback" onclick="toggleDim('feedback', this)"><span class="dim-icon">⚡</span>反馈密度</button>
+    <button class="dim-btn" data-dim="growth" onclick="toggleDim('growth', this)"><span class="dim-icon">📈</span>成长感</button>
+    <button class="dim-btn" data-dim="operate" onclick="toggleDim('operate', this)"><span class="dim-icon">🎮</span>操作参与</button>
+    <button class="dim-btn" data-dim="burden" onclick="toggleDim('burden', this)"><span class="dim-icon">🧠</span>理解轻松度</button>
+    <button class="dim-btn" data-dim="block" onclick="toggleDim('block', this)"><span class="dim-icon">🚧</span>推进顺畅度</button>
+  </div>
+  <div class="toggle-bar">
+    <button class="toggle-btn active" data-game="lw" onclick="toggleGameCombo(0, this)"><span class="dot"></span>LW</button>
+    <button class="toggle-btn active" data-game="wos" onclick="toggleGameCombo(1, this)"><span class="dot"></span>WOS</button>
+    <button class="toggle-btn active" data-game="ks" onclick="toggleGameCombo(2, this)"><span class="dot"></span>Kingshot</button>
+  </div>
+  <div class="chart-wrapper">
+    <canvas id="chartCombo"></canvas>
+  </div>
+</div>
+
+<script>
+// ========== 数据定义 ==========
+// 26个时间段标签
+const labels = [
+  '0-3','3-6','6-9','9-12','12-15','15-20','20-25','25-30',
+  '30-35','35-40','40-45','45-50','50-55','55-60','60-65',
+  '65-70','70-75','75-80','80-85','85-90','90-95','95-100',
+  '100-105','105-110','110-115','115-120'
+];
+
+// ===== Last War 数据（25行，110-115缺失，用null补） =====
+// 时间段: 0-3, 3-6, 6-9, 9-12, 12-15, 15-20, 20-25, 25-30,
+//         30-35, 35-40, 40-45, 45-50, 50-55, 55-60, 60-65,
+//         65-70, 70-75, 75-80, 80-85, 85-90, 90-95, 95-100,
+//         100-105, 105-110, 110-115, 115-120 (26 rows complete)
+const lw = {
+  goal:     [6,7,7,8,8,7,7,7, 7,7,7,7,7,6,7, 7,7,7,6,7,7,7, 7,6,5,5],
+  feedback: [9,7,8,8,8,8,7,6, 7,6,6,6,7,5,6, 6,7,6,6,5,6,5, 5,6,5,4],
+  growth:   [3,7,6,8,8,8,8,7, 7,6,7,6,6,5,6, 6,7,7,6,5,6,5, 4,6,5,4],
+  operate:  [8,8,8,8,7,8,7,6, 7,6,7,7,7,5,7, 6,6,6,7,6,6,6, 6,6,6,6],
+  burden:   [2,2,2,1,2,4,3,3, 3,4,3,3,3,3,3, 3,3,3,3,3,3,3, 3,3,5,4],
+  block:    [1,1,1,1,1,1,2,2, 4,5,5,4,3,3,4, 3,3,3,3,4,4,5, 5,6,5,5],
+  flow:     [7.50,8.00,8.00,8.67,8.33,8.00,7.67,7.17, 7.17,6.33,6.83,6.83,7.17,6.17,6.83, 6.83,7.17,7.00,6.83,6.33,6.67,6.17, 6.00,6.17,5.50,5.33]
+};
+
+// ===== WOS 数据（26行完整）=====
+// 列: D=目标清晰度, E=反馈密度, F=成长感, G=操作参与, H=理解负担, I=阻滞感, J=心流强度
+const wos = {
+  goal:     [2,4,5,5,5,5,5,4, 5,5,6,6,6,6,6, 6,7,7,7,7,7,7, 7,6,6,6],
+  feedback: [3,4,6,5,5,4,3,3, 4,4,6,5,5,5,5, 6,5,6,6,6,6,7, 6,5,5,4],
+  growth:   [3,5,6,5,4,4,4,4, 5,4,7,6,6,5,5, 6,5,7,6,6,6,7, 6,6,5,4],
+  operate:  [4,5,6,5,5,6,5,5, 5,4,6,5,5,5,5, 5,5,5,5,5,6,6, 6,6,5,4],
+  burden:   [2,2,3,2,2,3,3,2, 2,2,3,3,3,3,3, 2,3,3,3,3,3,4, 3,3,3,4],
+  block:    [2,2,2,2,2,4,5,4, 3,4,2,2,3,3,4, 3,3,3,3,3,3,3, 3,3,4,4],
+  flow:     [5.00,6.00,6.67,6.33,6.17,5.67,5.17,5.33, 6.00,5.50,7.00,6.50,6.33,6.17,6.00, 6.67,6.33,6.83,6.67,6.67,6.83,7.00, 6.83,6.50,6.00,5.33]
+};
+
+// ===== Kingshot 数据（26行完整）=====
+const ks = {
+  goal:     [2,3,3,4,5,5,6,6, 6,6,7,7,7,7,6, 7,7,7,7,7,6,7, 7,7,6,6],
+  feedback: [3,4,4,4,5,5,5,6, 6,6,6,6,6,6,5, 6,5,4,3,4,4,5, 6,5,5,4],
+  growth:   [2,4,4,5,5,5,4,5, 5,6,7,6,6,6,6, 6,5,4,3,4,5,7, 6,6,6,5],
+  operate:  [4,4,4,4,5,6,5,5, 7,6,6,5,5,6,6, 5,5,3,3,4,4,5, 6,5,6,4],
+  burden:   [2,2,2,2,2,2,3,5, 4,3,3,3,3,3,3, 3,3,4,4,4,3,3, 3,3,3,4],
+  block:    [2,2,2,2,2,2,4,3, 2,2,2,3,2,3,2, 2,3,4,4,3,3,2, 2,4,4,5],
+  flow:     [4.83,5.50,5.50,5.83,6.33,6.50,5.83,6.00, 6.67,6.83,7.17,6.83,6.83,6.67,6.67, 6.83,6.33,5.33,5.00,5.67,5.83,6.83, 7.00,6.33,6.33,5.33]
+};
+
+// ========== 图表配置 ==========
+Chart.defaults.color = '#aaa';
+Chart.defaults.borderColor = '#2a2d3a';
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif";
+
+const lwColor = '#f472b6';
+const wosColor = '#60a5fa';
+const ksColor = '#34d399';
+const lwBg = 'rgba(244,114,182,0.08)';
+const wosBg = 'rgba(96,165,250,0.08)';
+const ksBg = 'rgba(52,211,153,0.08)';
+
+function makeDatasets(lwData, wosData, ksData) {
+  return [
+    {
+      label: 'Last War',
+      data: lwData,
+      borderColor: lwColor,
+      backgroundColor: lwBg,
+      borderWidth: 2.5,
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      pointBackgroundColor: lwColor,
+      tension: 0.3,
+      fill: true,
+      spanGaps: true
+    },
+    {
+      label: 'WOS（无尽冬日）',
+      data: wosData,
+      borderColor: wosColor,
+      backgroundColor: wosBg,
+      borderWidth: 2.5,
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      pointBackgroundColor: wosColor,
+      tension: 0.3,
+      fill: true,
+      spanGaps: true
+    },
+    {
+      label: 'Kingshot（奔奔王国）',
+      data: ksData,
+      borderColor: ksColor,
+      backgroundColor: ksBg,
+      borderWidth: 2.5,
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      pointBackgroundColor: ksColor,
+      tension: 0.3,
+      fill: true,
+      spanGaps: true
+    }
+  ];
+}
+
+function makeOptions(yLabel, suggestedMin, suggestedMax) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1e2030',
+        borderColor: '#444',
+        borderWidth: 1,
+        titleFont: { size: 13 },
+        bodyFont: { size: 12 },
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          title: function(items) {
+            return '时间段: ' + items[0].label + ' min';
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: '时间段 (min)',
+          color: '#888',
+          font: { size: 12 }
+        },
+        ticks: {
+          maxRotation: 45,
+          font: { size: 10 }
+        },
+        grid: { color: '#1e2030' }
+      },
+      y: {
+        title: {
+          display: true,
+          text: yLabel,
+          color: '#888',
+          font: { size: 12 }
+        },
+        suggestedMin: suggestedMin,
+        suggestedMax: suggestedMax,
+        ticks: { font: { size: 11 } },
+        grid: { color: '#1e2030' }
+      }
+    }
+  };
+}
+
+// ========== 绘制图表 ==========
+
+// 1. 心流强度总曲线
+const mainChart = new Chart(document.getElementById('chartMain'), {
+  type: 'line',
+  data: { labels, datasets: makeDatasets(lw.flow, wos.flow, ks.flow) },
+  options: makeOptions('心流强度 (1-10)', 3, 10)
+});
+
+// ========== 主图游戏切换 ==========
+function toggleLine(gameIdx, btn) {
+  btn.classList.toggle('active');
+  const isVisible = btn.classList.contains('active');
+  const meta = mainChart.getDatasetMeta(gameIdx);
+  meta.hidden = !isVisible;
+  mainChart.update();
+}
+
+// ========== 合一子维度图表 ==========
+// 反向处理函数
+function invertData(arr) {
+  return arr.map(v => v === null ? null : 11 - v);
+}
+
+// 六维定义：每个维度 × 3 款游戏 = 3 条线，共 18 条
+const dimDefs = [
+  { key: 'goal',     name: '目标清晰度', invert: false },
+  { key: 'feedback', name: '反馈密度',   invert: false },
+  { key: 'growth',   name: '成长感',     invert: false },
+  { key: 'operate',  name: '操作参与',   invert: false },
+  { key: 'burden',   name: '理解轻松度', invert: true },
+  { key: 'block',    name: '推进顺畅度', invert: true }
+];
+
+const games = [
+  { data: lw,  label: 'LW',       color: lwColor, bg: lwBg },
+  { data: wos, label: 'WOS',      color: wosColor, bg: wosBg },
+  { data: ks,  label: 'Kingshot', color: ksColor,  bg: ksBg }
+];
+
+// 线型区分：同一游戏不同维度用不同虚线
+const dashPatterns = [
+  [],         // 目标清晰度 — 实线
+  [8, 4],     // 反馈密度 — 长虚线
+  [4, 4],     // 成长感 — 短虚线
+  [12, 4, 4, 4], // 操作参与 — 点划线
+  [2, 3],     // 理解轻松度 — 点线
+  [16, 6]     // 推进顺畅度 — 超长虚线
+];
+
+// 构建 18 条 dataset
+// 排列顺序：维度0-游戏0, 维度0-游戏1, 维度0-游戏2, 维度1-游戏0, ...
+const comboDatasets = [];
+dimDefs.forEach((dim, di) => {
+  games.forEach((game, gi) => {
+    let rawData = game.data[dim.key];
+    if (dim.invert) rawData = invertData(rawData);
+    comboDatasets.push({
+      label: dim.name + ' · ' + game.label,
+      data: rawData,
+      borderColor: game.color,
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderDash: dashPatterns[di],
+      pointRadius: 2,
+      pointHoverRadius: 5,
+      pointBackgroundColor: game.color,
+      tension: 0.3,
+      fill: false,
+      spanGaps: true,
+      hidden: di !== 0  // 默认只显示"目标清晰度"（第一个维度）
+    });
+  });
+});
+
+const comboChart = new Chart(document.getElementById('chartCombo'), {
+  type: 'line',
+  data: { labels, datasets: comboDatasets },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1e2030',
+        borderColor: '#444',
+        borderWidth: 1,
+        titleFont: { size: 13 },
+        bodyFont: { size: 12 },
+        padding: 12,
+        cornerRadius: 8,
+        filter: function(item) {
+          // tooltip 只显示当前可见的线
+          return !item.dataset.hidden && item.raw !== null;
+        },
+        callbacks: {
+          title: function(items) {
+            return '时间段: ' + items[0].label + ' min';
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: { display: true, text: '时间段 (min)', color: '#888', font: { size: 12 } },
+        ticks: { maxRotation: 45, font: { size: 10 } },
+        grid: { color: '#1e2030' }
+      },
+      y: {
+        title: { display: true, text: '评分 (1-10)', color: '#888', font: { size: 12 } },
+        suggestedMin: 0,
+        suggestedMax: 10,
+        ticks: { font: { size: 11 } },
+        grid: { color: '#1e2030' }
+      }
+    }
+  }
+});
+
+// ========== 维度切换状态 ==========
+// dimVisible: 每个维度是否激活
+const dimVisible = { goal: true, feedback: false, growth: false, operate: false, burden: false, block: false };
+// gameVisibleCombo: 每款游戏是否激活
+const gameVisibleCombo = [true, true, true];
+
+// 根据 dimVisible 和 gameVisibleCombo 统一刷新所有 18 条线的 hidden 状态
+function refreshCombo() {
+  dimDefs.forEach((dim, di) => {
+    games.forEach((game, gi) => {
+      const idx = di * 3 + gi;
+      const shouldShow = dimVisible[dim.key] && gameVisibleCombo[gi];
+      comboChart.data.datasets[idx].hidden = !shouldShow;
+    });
+  });
+  comboChart.update();
+}
+
+// 维度按钮点击
+function toggleDim(dimKey, btn) {
+  btn.classList.toggle('active');
+  dimVisible[dimKey] = btn.classList.contains('active');
+  refreshCombo();
+}
+
+// 合一图表的游戏按钮点击
+function toggleGameCombo(gameIdx, btn) {
+  btn.classList.toggle('active');
+  gameVisibleCombo[gameIdx] = btn.classList.contains('active');
+  refreshCombo();
+}
+</script>
+
+</body>
+</html>
